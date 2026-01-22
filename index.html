@@ -19,25 +19,27 @@
       background: linear-gradient(135deg, var(--bg1), var(--bg2));
       padding:18px;
     }
-    .wrap{ width:min(820px, 100%); display:grid; grid-template-columns:1fr; gap:14px; }
+    .wrap{ width:min(900px, 100%); display:grid; grid-template-columns:1fr; gap:14px; }
     .card{
       background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow);
       border-radius: var(--radius); padding: 16px; backdrop-filter: blur(10px);
     }
     h1{ margin:0 0 10px 0; font-size: 20px; letter-spacing: .02em; }
     .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-    .field, .modes{
+    .field, .modes, .sound{
       display:flex; gap:10px; align-items:center; padding: 12px 12px;
       border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.10);
       flex: 1 1 260px; min-width: 240px;
     }
     .modes{ flex: 1 1 360px; min-width: 260px; gap:12px; flex-wrap:wrap; }
+    .sound{ flex: 1 1 520px; min-width: 280px; flex-wrap:wrap; gap:10px; }
     label{ font-size: 13px; color: var(--muted); white-space:nowrap; }
     input[type="number"]{
       width: 110px; padding: 10px 10px; border-radius: 10px;
       border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.10);
       color: var(--text); outline:none; font-size: 16px;
     }
+    input[type="range"]{ width: 160px; }
     .radio{
       display:flex; align-items:center; gap:8px; padding: 8px 10px; border-radius: 999px;
       border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06);
@@ -63,6 +65,7 @@
     .primary{ background: rgba(56,189,248,.22); border-color: rgba(56,189,248,.45); }
     .danger{ background: rgba(251,113,133,.20); border-color: rgba(251,113,133,.45); }
     button:disabled{ opacity:.55; cursor:not-allowed; }
+
     .pill{
       display:inline-flex; gap:8px; align-items:center; justify-content:center;
       padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18);
@@ -70,7 +73,7 @@
     }
     .pill strong{ color:#fff; }
     .split{ display:grid; grid-template-columns:1fr; gap:14px; }
-    @media (min-width: 780px){ .split{ grid-template-columns: 1.05fr .95fr; } }
+    @media (min-width: 820px){ .split{ grid-template-columns: 1.15fr .85fr; } }
     .small{ font-size:12px; color: rgba(255,255,255,.85); line-height:1.55; }
     .kbd{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -108,12 +111,24 @@
             補正（÷1.25）
           </label>
         </div>
+
+        <div class="sound" aria-label="サウンド設定">
+          <label class="radio" for="sound-on" title="終了音を鳴らす">
+            <input id="sound-on" name="sound" type="checkbox" checked />
+            終了音 ON
+          </label>
+
+          <label style="font-size:13px;color:var(--muted);">音量</label>
+          <input id="sound-vol" type="range" min="0" max="1" step="0.01" value="0.25" />
+          <span id="vol-label" style="font-size:13px;color:var(--muted);">25%</span>
+
+          <button id="btnTestSound" type="button">テスト音</button>
+        </div>
       </div>
 
       <div class="hint">
-        注意：iPhoneでは画面が消灯/ロックすると、Webページのタイマー処理が止まることがあります。<br>
-        このアプリは「自動スリープ」を防ぐために Wake Lock を使います（対応ブラウザのみ）。<br>
-        それでも消灯した場合は、復帰時に「時計ベース」で残り時間を補正します。
+        iPhoneでは「自動消灯」中にJavaScriptが止まることがあります。Wake Lock が取れれば自動消灯を抑止できます。<br>
+        ただし iOS / Safari の対応状況に依存します（iOS Safari 16.4+ で対応）。 :contentReference[oaicite:9]{index=9}
       </div>
     </div>
 
@@ -137,7 +152,7 @@
           <span class="tag" id="audioTag">Sound: 未初期化</span>
         </div>
 
-        <div class="toast" id="toast">完了しました（音が鳴らない場合はマナーモード/音量も確認してください）。</div>
+        <div class="toast" id="toast">完了しました（音が鳴らない場合は、テスト音を一度押してから再確認してください）。</div>
 
         <div class="small" style="margin-top:12px;">
           ショートカット：<span class="kbd">Space</span> 開始/一時停止、<span class="kbd">R</span> リセット
@@ -152,12 +167,11 @@
         </div>
         <div class="small" style="margin-top:8px;">
           ・補正（÷1.25）の例：25 ÷ 1.25 = 20 分<br>
-          ・端数は <strong>四捨五入（分単位）</strong>しています（例：21.6分 → 22分）
+          ・端数は <strong>四捨五入（分単位）</strong>しています
         </div>
         <hr style="border:none;border-top:1px solid rgba(255,255,255,.18);margin:12px 0;">
         <div class="small">
-          GitHub PagesはHTTPSなので Wake Lock の前提条件を満たします。<br>
-          ただしブラウザ/OSにより対応状況は変わります。
+          Wake Lock の既知問題：ホーム画面Webアプリ(PWA)で効かないケースが報告されています。 :contentReference[oaicite:10]{index=10}
         </div>
       </div>
     </div>
@@ -169,6 +183,11 @@
   const elMinutes = document.getElementById('minutes');
   const elModeNormal = document.getElementById('mode-normal');
   const elModeDiv = document.getElementById('mode-div');
+
+  const elSoundOn = document.getElementById('sound-on');
+  const elSoundVol = document.getElementById('sound-vol');
+  const elVolLabel = document.getElementById('vol-label');
+  const elBtnTestSound = document.getElementById('btnTestSound');
 
   const elTimeView = document.getElementById('timeView');
   const elStateView = document.getElementById('stateView');
@@ -189,18 +208,13 @@
 
   // ===== State =====
   let tickId = null;
-
-  // 計画秒数（設定値）
   let plannedSec = 0;
-
-  // タイマー運用値
   let isRunning = false;
   let hasFinished = false;
 
   // 終了予定時刻（performance.now基準）
   let endAt = 0;
-
-  // 一時停止時点の残り秒（時計ベース補正のため）
+  // 一時停止時点の残り秒
   let pausedRemainingSec = 0;
 
   // ===== Wake Lock =====
@@ -209,25 +223,27 @@
   async function requestWakeLock(){
     try{
       if (!('wakeLock' in navigator) || !navigator.wakeLock) {
-        elWakeTag.textContent = 'WakeLock: 非対応';
-        return;
+        elWakeTag.textContent = 'WakeLock: 非対応（iOS 16.4未満の可能性）';
+        return false;
       }
       wakeLock = await navigator.wakeLock.request('screen');
       elWakeTag.textContent = 'WakeLock: 取得中';
       wakeLock.addEventListener('release', () => {
         elWakeTag.textContent = 'WakeLock: 解放';
       });
+      return true;
     } catch (e) {
-      elWakeTag.textContent = 'WakeLock: 取得失敗';
+      const name = (e && e.name) ? e.name : 'Error';
+      // NotAllowedError / NotSupportedError 等が見えると切り分けが楽
+      elWakeTag.textContent = 'WakeLock: 取得失敗 (' + name + ')';
       wakeLock = null;
+      return false;
     }
   }
 
   async function releaseWakeLock(){
     try{
-      if (wakeLock) {
-        await wakeLock.release();
-      }
+      if (wakeLock) await wakeLock.release();
     } catch (e) {
       // noop
     } finally {
@@ -235,53 +251,66 @@
     }
   }
 
-  // 復帰時に再取得（iOS/ブラウザによってはvisibilitychange後に必要）
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible' && isRunning) {
       await requestWakeLock();
     }
   });
 
-  // ===== Audio (iOS対策：ユーザー操作内で生成＆resume) =====
+  // ===== Audio (iOS対策：awaitを挟まない “同期的アンロック”) =====
   let audioCtx = null;
+  let audioUnlocked = false;
 
-  async function ensureAudioReady(){
+  function updateVolLabel(){
+    const pct = Math.round(Number(elSoundVol.value) * 100);
+    elVolLabel.textContent = pct + '%';
+  }
+
+  function unlockAudioSync(){
+    // 重要：ここで await しない（iOSは「ユーザー操作の同一スタック」が条件になりがち）
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      elAudioTag.textContent = 'Sound: 非対応';
+      audioUnlocked = false;
+      return false;
+    }
     try{
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) {
-        elAudioTag.textContent = 'Sound: 非対応';
-        return false;
-      }
       if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      elAudioTag.textContent = 'Sound: Ready';
+      // resume() は Promise だが、ここでは await しない
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      audioUnlocked = true;
+      elAudioTag.textContent = 'Sound: Ready（テスト済）';
       return true;
     } catch (e) {
       elAudioTag.textContent = 'Sound: 初期化失敗';
+      audioUnlocked = false;
       return false;
     }
   }
 
   function beep(){
-    // ensureAudioReady() は Start ボタン内で必ず呼ばれる想定
+    if (!elSoundOn.checked) return;
+    if (!audioCtx || !audioUnlocked) return;
+
     try{
-      if (!audioCtx) return;
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.type = 'sine';
       o.frequency.value = 880;
 
-      // 小さめ、かつクリックノイズ回避でエンベロープ
+      const vol = Math.max(0, Math.min(1, Number(elSoundVol.value)));
+      const peak = 0.12 * vol; // 小さめ基準
+
       const now = audioCtx.currentTime;
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
 
       o.connect(g);
       g.connect(audioCtx.destination);
 
       o.start(now);
-      o.stop(now + 0.21);
+      o.stop(now + 0.23);
     } catch(e){
       // noop
     }
@@ -351,7 +380,6 @@
     elPlannedLabel.textContent = mmss(plannedSec);
 
     if (!isRunning && !hasFinished) {
-      // 待機中は設定時間を表示
       elTimeView.textContent = mmss(plannedSec);
       pausedRemainingSec = plannedSec;
     }
@@ -373,8 +401,7 @@
   }
 
   function render(){
-    const rem = getRemainingSec();
-    elTimeView.textContent = mmss(rem);
+    elTimeView.textContent = mmss(getRemainingSec());
   }
 
   function startTick(){
@@ -382,24 +409,24 @@
     tickId = setInterval(() => {
       const rem = getRemainingSec();
       elTimeView.textContent = mmss(rem);
-
       if (rem <= 0) {
-        // 完了
         stopTick();
         hasFinished = true;
         pausedRemainingSec = 0;
         setUIFinished();
         releaseWakeLock();
+        // 終了音：ここで鳴らす（事前にテスト音でアンロック推奨）
         beep();
       }
-    }, 250); // 250msで表示を滑らかに＆補正
+    }, 250);
   }
 
   async function start(){
-    // iOS対策：必ずユーザー操作（クリック）内で音初期化
-    await ensureAudioReady();
+    // 1) iOS対策：最初に “同期的” に音をアンロック（awaitしない）
+    //   テスト音未実施でも、Startが最初のユーザー操作ならここで解禁できる可能性を上げる
+    unlockAudioSync();
 
-    // Wake Lock：開始時に取得（非対応でも動作は継続）
+    // 2) Wake Lock（非対応/失敗でもタイマーは動かす）
     await requestWakeLock();
 
     if (hasFinished || pausedRemainingSec <= 0) {
@@ -407,10 +434,8 @@
       updateLabels();
       pausedRemainingSec = plannedSec;
     }
-
     if (pausedRemainingSec <= 0) return;
 
-    // endAt を再計算して走らせる（時計ベース）
     isRunning = true;
     endAt = performance.now() + pausedRemainingSec * 1000;
 
@@ -442,8 +467,20 @@
   elBtnPause.addEventListener('click', pause);
   elBtnReset.addEventListener('click', reset);
 
+  elBtnTestSound.addEventListener('click', () => {
+    // テスト音ボタン＝確実なユーザー操作
+    const ok = unlockAudioSync();
+    if (ok) {
+      // 1回鳴らして確認
+      beep();
+      elAudioTag.textContent = 'Sound: Ready（テスト済）';
+    }
+  });
+
+  elSoundVol.addEventListener('input', updateVolLabel);
+
   elMinutes.addEventListener('input', () => {
-    if (isRunning) return; // 実行中に変えると混乱するため固定
+    if (isRunning) return;
     hasFinished = false;
     updateLabels();
     setUIIdle();
@@ -471,6 +508,7 @@
   });
 
   // init
+  updateVolLabel();
   updateLabels();
   reset();
 })();
